@@ -113,7 +113,9 @@ module Sunspot
           pid = IO.read(pid_path).to_i
           begin
             Process.kill('TERM', pid)
-            exec_in_solr_executable_directory(['solr', 'stop', '-p', "#{port}"]) if port
+            command = %w[./solr stop]
+            command << "-p" << "#{port}" if port
+            exec_in_solr_executable_directory(command)
           rescue Errno::ESRCH
             raise NotRunningError, "Process with PID #{pid} is no longer running"
           ensure
@@ -152,7 +154,7 @@ module Sunspot
       end
 
       def solr_executable
-        @solr_executable || SOLR_EXECUTABLE
+        @solr_executable ||= SOLR_EXECUTABLE
       end
 
       def solr_executable_directory
@@ -160,7 +162,7 @@ module Sunspot
       end
 
       def exec_in_solr_executable_directory(command)
-        FileUtils.cd(solr_executable_directory) { exec(*command) }
+        FileUtils.cd(solr_executable_directory) { system(*command) }
       end
 
       #
